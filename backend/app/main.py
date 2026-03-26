@@ -9,10 +9,19 @@ from .auth import hash_password, verify_password
 from typing import List
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 SECRET_KEY = "supersecretkey123"
 ALGORITHM = "HS256"
@@ -71,8 +80,7 @@ def login(user: UserCreate, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not verify_password(user.password, db_user.password):
-        raise HTTPException(status_code=401, detail="Invalid email or passowrd")
-    
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_access_token(data={"sub": db_user.email})
     return {"access_token": token, "token_type": "bearer"}
 
